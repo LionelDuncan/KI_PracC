@@ -121,7 +121,6 @@ class QLearningAgent(ReinforcementAgent):
 
         expected_r = self.alpha * (reward + self.discount * self.getValue(nextState))
         old_qv = (1-self.alpha) * self.getQValue(state, action)
-
         self.qvalues[(state, action)] = old_qv + expected_r
 
     def getPolicy(self, state):
