@@ -45,16 +45,17 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         # Write value iteration code here
         
-        states = mdp.getStates()
+        times = 0
+        
 
-        for x in range (0, iterations):
+        while times < iterations:
             newvalues = util.Counter()
-            
+            states = mdp.getStates()
             for state in states:
                 action = self.getAction(state)
                 if action is not None:
                     newvalues[state] = self.getQValue(state, action)
-            
+            times += 1
             self.values = newvalues
 
     def getValue(self, state):
@@ -69,18 +70,13 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        som = 0
+        qvalue = 0
         tsap = self.mdp.getTransitionStatesAndProbs(state, action)
         
-        for transtate in tsap:
-            prevstate = transtate[0]
-            prob = transtate[1]
-            reward = self.mdp.getReward(state, action, prevstate)
-            value = self.getValue(prevstate)
-            som += prob * (reward + self.discount * value)
+        for transtate, prop in tsap:
+            qvalue += prop * (self.mdp.getReward(state, action, transtate) + self.discount * self.getValue(transtate))
         
-        return som
-        util.raiseNotDefined()
+        return qvalue
 
     def computeActionFromValues(self, state):
         """
@@ -91,21 +87,20 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
+        actions = self.mdp.getPossibleActions(state)
 
         if self.mdp.isTerminal(state):
             return None
+
         else:
-            actions = self.mdp.getPossibleActions(state)
-            value = self.getQValue (state, actions[0])
             action = actions[0]
-
+            qvalue = self.getQValue(state, action)
             for act in actions:
-                curvalue = self.getQValue(state, act)
-                if value <= curvalue:
-                    value = curvalue
-                    action = act
-
-            return action    
+                if qvalue <= self.getQValue(state, act):
+                   qvalue = self.getQValue(state, act)
+                   action = act
+        return action
+   
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
